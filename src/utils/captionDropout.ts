@@ -2,125 +2,217 @@
  * Implements the caption dropout logic as found in sd-scripts
  */
 
+import * as seedrandom from 'seedrandom';
+
 /**
  * Applies caption dropout to a given caption string
  * 
- * @param caption The caption text to process
+ * @param originalCaption The caption text to process
  * @param dropoutRate The probability of dropping out individual tags (0 to 1)
  * @param keepTokens Number of tokens to keep at beginning (won't be dropped)
  * @param keepTokensSeparator Separator for keep tokens sections
  * @param captionSeparator Separator used between caption tokens
+ * @param seed Optional seed for deterministic results
  * @returns Processed caption after dropout
  */
 export function applyCaptionDropout(
-  caption: string,
+  originalCaption: string,
   dropoutRate: number,
-  keepTokens: number = 0,
-  keepTokensSeparator: string = "|",
-  captionSeparator: string = ","
+  keepTokens: number = 1,
+  keepTokensSeparator: string = '|||',
+  captionSeparator: string = ',',
+  seed?: number
 ): string {
-  if (dropoutRate <= 0) {
-    return caption;
-  }
+  // Trim whitespace
+  const trimmedCaption = originalCaption.trim();
 
-  // Handle full caption dropout (entire caption becomes empty)
-  // This is handled separately in the original code
-  // We're only implementing tag dropout here
-  
-  let fixedTokens: string[] = [];
-  let flexTokens: string[] = [];
-  let fixedSuffixTokens: string[] = [];
+  // Split by the keep tokens separator if present
+  let fixedPart = '';
+  let flexPart = trimmedCaption;
+  let fixedSuffixPart = '';
 
-  // Process keep tokens sections using the separator
-  if (keepTokensSeparator && caption.includes(keepTokensSeparator)) {
-    const parts = caption.split(keepTokensSeparator);
+  if (keepTokensSeparator && trimmedCaption.includes(keepTokensSeparator)) {
+    const parts = trimmedCaption.split(keepTokensSeparator);
     
-    // Handle fixed part (beginning)
-    const fixedPart = parts[0];
-    fixedTokens = fixedPart
-      .split(captionSeparator)
-      .map(t => t.trim())
-      .filter(t => t);
-    
-    // Handle flex part (middle, can be dropped)
-    let flexPart = parts[1];
-    
-    // Handle fixed suffix part (end) if present
-    if (parts.length > 2 || (parts.length > 1 && flexPart.includes(keepTokensSeparator))) {
-      // If there's a second keep_tokens_separator
-      if (flexPart.includes(keepTokensSeparator)) {
-        const flexParts = flexPart.split(keepTokensSeparator);
-        flexPart = flexParts[0];
-        const fixedSuffixPart = flexParts[1];
-        
-        fixedSuffixTokens = fixedSuffixPart
-          .split(captionSeparator)
-          .map(t => t.trim())
-          .filter(t => t);
-      } else if (parts.length > 2) {
-        const fixedSuffixPart = parts[2];
-        fixedSuffixTokens = fixedSuffixPart
-          .split(captionSeparator)
-          .map(t => t.trim())
-          .filter(t => t);
+    if (parts.length >= 2) {
+      fixedPart = parts[0];
+      flexPart = parts[1];
+      
+      // Check if there's a second separator for suffix
+      if (parts.length > 2) {
+        fixedSuffixPart = parts.slice(2).join(keepTokensSeparator);
       }
     }
-    
-    flexTokens = flexPart
-      .split(captionSeparator)
-      .map(t => t.trim())
-      .filter(t => t);
   } else {
-    // No keep_tokens_separator, use the keepTokens count
-    const tokens = caption
-      .split(captionSeparator)
-      .map(t => t.trim())
-      .filter(t => t);
-    
-    if (keepTokens > 0) {
-      fixedTokens = tokens.slice(0, keepTokens);
-      flexTokens = tokens.slice(keepTokens);
-    } else {
-      flexTokens = tokens;
-    }
+    // Use the keepTokens parameter if no separator
+    const tokens = trimmedCaption.split(captionSeparator);
+    fixedPart = tokens.slice(0, keepTokens).join(captionSeparator);
+    flexPart = tokens.slice(keepTokens).join(captionSeparator);
   }
 
-  // Apply dropout to flex tokens
-  const droppedFlexTokens = flexTokens.filter(() => Math.random() >= dropoutRate);
+  // Split into tokens
+  const fixedTokens = fixedPart.split(captionSeparator).map(t => t.trim()).filter(t => t);
+  const flexTokens = flexPart.split(captionSeparator).map(t => t.trim()).filter(t => t);
+  const fixedSuffixTokens = fixedSuffixPart.split(captionSeparator).map(t => t.trim()).filter(t => t);
+
+  // Apply dropout to flexible tokens
+  const rng = seed !== undefined ? seedrandom(String(seed)) : Math.random;
+  const tokensAfterDropout = flexTokens.filter(() => rng() > dropoutRate);
+
+  // Join the tokens back together
+  return [...fixedTokens, ...tokensAfterDropout, ...fixedSuffixTokens].join(captionSeparator + ' ');
+}
+
+/**
+ * Shuffles a given caption string
+ * 
+ * @param originalCaption The caption text to shuffle
+ * @param keepTokens Number of tokens to keep at beginning (won't be shuffled)
+ * @param keepTokensSeparator Separator for keep tokens sections
+ * @param captionSeparator Separator used between caption tokens
+ * @param seed Optional seed for deterministic results
+ * @returns Shuffled caption
+ */
+export function shuffleCaption(
+  originalCaption: string,
+  keepTokens: number = 1,
+  keepTokensSeparator: string = '|||',
+  captionSeparator: string = ',',
+  seed?: number
+): string {
+  // Trim whitespace
+  const trimmedCaption = originalCaption.trim();
+
+  // Split by the keep tokens separator if present
+  let fixedPart = '';
+  let flexPart = trimmedCaption;
+  let fixedSuffixPart = '';
+
+  if (keepTokensSeparator && trimmedCaption.includes(keepTokensSeparator)) {
+    const parts = trimmedCaption.split(keepTokensSeparator);
+    
+    if (parts.length >= 2) {
+      fixedPart = parts[0];
+      flexPart = parts[1];
+      
+      // Check if there's a second separator for suffix
+      if (parts.length > 2) {
+        fixedSuffixPart = parts.slice(2).join(keepTokensSeparator);
+      }
+    }
+  } else {
+    // Use the keepTokens parameter if no separator
+    const tokens = trimmedCaption.split(captionSeparator);
+    fixedPart = tokens.slice(0, keepTokens).join(captionSeparator);
+    flexPart = tokens.slice(keepTokens).join(captionSeparator);
+  }
+
+  // Split into tokens
+  const fixedTokens = fixedPart.split(captionSeparator).map(t => t.trim()).filter(t => t);
+  const flexTokens = flexPart.split(captionSeparator).map(t => t.trim()).filter(t => t);
+  const fixedSuffixTokens = fixedSuffixPart.split(captionSeparator).map(t => t.trim()).filter(t => t);
+
+  // Shuffle flexible tokens with seed if provided (matches sd-scripts implementation)
+  const shuffledTokens = [...flexTokens];
   
-  // Join everything back together
-  return [...fixedTokens, ...droppedFlexTokens, ...fixedSuffixTokens].join(", ");
+  // Use seeded RNG if seed is provided (Fisher-Yates shuffle algorithm)
+  const rng = seed !== undefined ? seedrandom(String(seed)) : Math.random;
+  
+  for (let i = shuffledTokens.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffledTokens[i], shuffledTokens[j]] = [shuffledTokens[j], shuffledTokens[i]];
+  }
+
+  // Join the tokens back together
+  return [...fixedTokens, ...shuffledTokens, ...fixedSuffixTokens].join(captionSeparator + ' ');
 }
 
 /**
  * Simulates caption dropout steps for visualization
  * 
- * @param caption The original caption
+ * @param originalCaption The original caption
  * @param dropoutRate The dropout rate to apply
- * @param numSteps How many simulated steps to run
+ * @param steps How many simulated steps to run
  * @param keepTokens Number of tokens to keep at beginning
  * @param keepTokensSeparator Separator for keep tokens sections
  * @param captionSeparator Separator used between caption tokens
+ * @param seed Optional seed for deterministic results
  * @returns Array of resulting captions after each step
  */
 export function simulateDropoutSteps(
-  caption: string,
+  originalCaption: string,
   dropoutRate: number,
-  numSteps: number,
-  keepTokens: number = 0,
-  keepTokensSeparator: string = "|",
-  captionSeparator: string = ","
+  steps: number = 1500,
+  keepTokens: number = 1,
+  keepTokensSeparator: string = '|||',
+  captionSeparator: string = ',',
+  seed?: number
 ): string[] {
   const results: string[] = [];
   
-  for (let i = 0; i < numSteps; i++) {
+  // Create seeded RNG
+  const mainRng = seed !== undefined ? seedrandom(String(seed)) : Math.random;
+  
+  // Generate a new seed for each step derived from the main seed
+  for (let step = 0; step < steps; step++) {
+    // If seed is provided, create deterministic seeds for each step
+    const stepSeed = seed !== undefined ? 
+      Math.floor(mainRng() * 1_000_000_000) : 
+      undefined;
+    
     results.push(
       applyCaptionDropout(
-        caption,
+        originalCaption,
         dropoutRate,
         keepTokens,
         keepTokensSeparator,
-        captionSeparator
+        captionSeparator,
+        stepSeed
+      )
+    );
+  }
+  
+  return results;
+}
+
+/**
+ * Simulates caption shuffle steps for visualization
+ * 
+ * @param originalCaption The original caption
+ * @param steps How many simulated steps to run
+ * @param keepTokens Number of tokens to keep at beginning
+ * @param keepTokensSeparator Separator for keep tokens sections
+ * @param captionSeparator Separator used between caption tokens
+ * @param seed Optional seed for deterministic results
+ * @returns Array of resulting shuffled captions after each step
+ */
+export function simulateShuffleSteps(
+  originalCaption: string,
+  steps: number = 1500,
+  keepTokens: number = 1,
+  keepTokensSeparator: string = '|||',
+  captionSeparator: string = ',',
+  seed?: number
+): string[] {
+  const results: string[] = [];
+  
+  // Create seeded RNG
+  const mainRng = seed !== undefined ? seedrandom(String(seed)) : Math.random;
+  
+  // Generate a new seed for each step derived from the main seed
+  for (let step = 0; step < steps; step++) {
+    // If seed is provided, create deterministic seeds for each step
+    const stepSeed = seed !== undefined ? 
+      Math.floor(mainRng() * 1_000_000_000) : 
+      undefined;
+    
+    results.push(
+      shuffleCaption(
+        originalCaption,
+        keepTokens,
+        keepTokensSeparator,
+        captionSeparator,
+        stepSeed
       )
     );
   }

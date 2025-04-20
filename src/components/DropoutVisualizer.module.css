@@ -1,23 +1,102 @@
+/* Theme Variables */
+:root {
+  /* Light theme (default) */
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --title-color: #1a1a1a;
+  --panel-bg: #f7f7f7;
+  --panel-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --input-border: #ccc;
+  --input-bg: #ffffff;
+  --button-bg: #4a7dff;
+  --button-hover: #3a63cc;
+  --button-disabled: #b3b3b3;
+  --error-bg: #ffeded;
+  --error-color: #c92a2a;
+  --error-border: #e03131;
+  --item-hover: #f0f5ff;
+  --item-selected: #e6f0ff;
+  --item-selected-border: #4a7dff;
+  --caption-filename: #555;
+  --caption-preview: #666;
+  --pre-bg: #ffffff;
+  --pre-border: #ddd;
+  --result-header: #4a7dff;
+}
+
+/* Dark theme */
+html[data-theme='dark'] {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --title-color: #ffffff;
+  --panel-bg: #1e1e1e;
+  --panel-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --input-border: #444;
+  --input-bg: #2a2a2a;
+  --button-bg: #3d6fd9;
+  --button-hover: #2d5aaf;
+  --button-disabled: #555555;
+  --error-bg: #3c1f1f;
+  --error-color: #ff6b6b;
+  --error-border: #9d2c2c;
+  --item-hover: #252e3f;
+  --item-selected: #203048;
+  --item-selected-border: #3d6fd9;
+  --caption-filename: #aaaaaa;
+  --caption-preview: #888888;
+  --pre-bg: #2a2a2a;
+  --pre-border: #444;
+  --result-header: #5d8bff;
+}
+
+/* Theme toggle styles */
+.themeToggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  box-shadow: var(--panel-shadow);
+  z-index: 10;
+}
+
+.themeToggle:hover {
+  transform: rotate(15deg);
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  color: #333;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  position: relative;
 }
 
 .title {
   text-align: center;
   margin-bottom: 2rem;
-  color: #1a1a1a;
+  color: var(--title-color);
 }
 
 .settings {
-  background-color: #f7f7f7;
+  background-color: var(--panel-bg);
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--panel-shadow);
 }
 
 .settingGroup {
@@ -34,9 +113,11 @@
 .settingGroup input, .settingGroup select {
   flex: 1;
   padding: 0.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
   margin-right: 1rem;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .settingGroup input[type="range"] {
@@ -52,7 +133,7 @@
 }
 
 button {
-  background-color: #4a7dff;
+  background-color: var(--button-bg);
   color: white;
   border: none;
   border-radius: 4px;
@@ -63,11 +144,11 @@ button {
 }
 
 button:hover {
-  background-color: #3a63cc;
+  background-color: var(--button-hover);
 }
 
 button:disabled {
-  background-color: #b3b3b3;
+  background-color: var(--button-disabled);
   cursor: not-allowed;
 }
 
@@ -77,28 +158,28 @@ button:disabled {
 }
 
 .error {
-  background-color: #ffeded;
-  color: #c92a2a;
+  background-color: var(--error-bg);
+  color: var(--error-color);
   padding: 0.8rem;
   border-radius: 4px;
   margin-bottom: 1.5rem;
-  border-left: 4px solid #e03131;
+  border-left: 4px solid var(--error-border);
 }
 
 .captionSelector {
-  background-color: #f7f7f7;
+  background-color: var(--panel-bg);
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--panel-shadow);
 }
 
 .captionList {
   max-height: 300px;
   overflow-y: auto;
-  border: 1px solid #ddd;
+  border: 1px solid var(--input-border);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--input-bg);
 }
 
 .captionItem {
@@ -113,47 +194,48 @@ button:disabled {
 }
 
 .captionItem:hover {
-  background-color: #f0f5ff;
+  background-color: var(--item-hover);
 }
 
 .captionItem.selected {
-  background-color: #e6f0ff;
-  border-left: 4px solid #4a7dff;
+  background-color: var(--item-selected);
+  border-left: 4px solid var(--item-selected-border);
 }
 
 .fileName {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--caption-filename);
   margin-bottom: 0.3rem;
 }
 
 .captionPreview {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--caption-preview);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .originalCaption, .resultsContainer {
-  background-color: #f7f7f7;
+  background-color: var(--panel-bg);
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--panel-shadow);
 }
 
 .originalCaption pre, .resultItem pre {
-  background-color: white;
+  background-color: var(--pre-bg);
   border-radius: 4px;
   padding: 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--pre-border);
   font-family: monospace;
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 300px;
   overflow-y: auto;
+  color: var(--text-color);
 }
 
 .resultItem {
@@ -163,5 +245,260 @@ button:disabled {
 .resultHeader {
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: #4a7dff;
+  color: var(--result-header);
+}
+
+/* Theme selector styles */
+.themeSelector {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.themeButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.themeButton:hover {
+  background-color: var(--button-bg);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.themeButton.active {
+  background-color: var(--button-bg);
+  color: white;
+  border-color: var(--button-bg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Toggle switch styles */
+.toggleSwitch {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.toggleButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleButton:hover {
+  background-color: var(--button-bg);
+  color: white;
+}
+
+.toggleButton.active {
+  background-color: var(--button-bg);
+  color: white;
+  border-color: var(--button-bg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Seed controls */
+.seedControls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex: 1;
+}
+
+.seedControls input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
+}
+
+.seedControls input[type="number"] {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.seedButton {
+  background-color: var(--button-bg);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seedButton:hover:not(:disabled) {
+  background-color: var(--button-hover);
+  transform: rotate(15deg);
+}
+
+.seedButton:disabled {
+  background-color: var(--button-disabled);
+  cursor: not-allowed;
+}
+
+/* Make results container more interesting */
+.resultItem {
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--input-border);
+  margin-bottom: 1rem;
+}
+
+.resultItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.resultHeader {
+  background-color: var(--button-bg);
+  color: white;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+/* Stats display for visualizing token counts */
+.tokenStats {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: var(--panel-bg);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  flex: 1 0 200px;
+  background-color: var(--input-bg);
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  text-align: center;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--button-bg);
+  margin-bottom: 0.5rem;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.chartContainer {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--panel-bg);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: var(--panel-shadow);
+  height: 500px;
+  position: relative;
+}
+
+/* Add responsive layout for small screens */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .tokenStats {
+    flex-direction: column;
+  }
+  
+  .chartContainer {
+    height: 600px;
+  }
+  
+  .statItem {
+    flex: 1 0 100%;
+  }
+  
+  .settingGroup {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .settingGroup label {
+    flex: 0 0 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Pagination styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 0.5rem;
+}
+
+.pagination button {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-color);
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: var(--button-bg);
+  color: white;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  padding: 0.4rem 0.8rem;
+  background-color: var(--panel-bg);
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  color: var(--text-color);
+}
+
+.captionCount {
+  font-size: 0.85rem;
+  font-weight: normal;
+  color: var(--caption-preview);
+  margin-left: 0.5rem;
 } 

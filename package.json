@@ -12,8 +12,11 @@
   },
   "dependencies": {
     "@solidjs/router": "^0.15.3",
+    "@types/seedrandom": "^3.0.8",
+    "chart.js": "^4.4.9",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "seedrandom": "^3.0.5",
     "solid-js": "^1.9.5",
     "solid-styled-components": "^0.28.5"
   },

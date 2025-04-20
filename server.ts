@@ -1,4 +1,4 @@
-import express, { Request, Response, Router } from 'express';
+import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
@@ -8,14 +8,17 @@ const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
 const stat = promisify(fs.stat);
 
+type Request = express.Request;
+type Response = express.Response;
+
 const app = express();
 const PORT = 3000; // API port
 
 // Enable CORS for the frontend
-app.use(cors({ origin: 'http://localhost:6655' }));
+app.use(cors({ origin: ['http://localhost:6655', 'http://localhost:6656', 'http://localhost:6657'] }));
 
 // Setup API routes
-const apiRouter = Router();
+const apiRouter = express.Router();
 app.use('/api', apiRouter);
 
 // API endpoint to get caption files from a directory
