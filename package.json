@@ -4,14 +4,25 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:frontend\"",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:server": "ts-node --project tsconfig.server.json server.ts",
+    "dev:frontend": "vite"
   },
   "dependencies": {
-    "solid-js": "^1.9.5"
+    "@solidjs/router": "^0.15.3",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "solid-js": "^1.9.5",
+    "solid-styled-components": "^0.28.5"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
     "typescript": "~5.7.2",
     "vite": "^6.3.1",
     "vite-plugin-solid": "^2.11.6"
