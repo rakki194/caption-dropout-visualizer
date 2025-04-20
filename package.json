@@ -15,6 +15,8 @@
     "@types/seedrandom": "^3.0.8",
     "chart.js": "^4.4.9",
     "cors": "^2.8.5",
+    "d3": "^7.9.0",
+    "d3-cloud": "^1.2.7",
     "express": "^5.1.0",
     "seedrandom": "^3.0.5",
     "solid-js": "^1.9.5",
@@ -22,6 +24,8 @@
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
+    "@types/d3": "^7.4.3",
+    "@types/d3-cloud": "^1.2.9",
     "@types/express": "^5.0.1",
     "concurrently": "^9.1.2",
     "nodemon": "^3.1.9",

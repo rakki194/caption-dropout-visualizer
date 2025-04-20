@@ -13,16 +13,34 @@ import TokenHeatmap from './TokenHeatmap';
 import PositionAnalysisChart from './PositionAnalysisChart';
 import TokenLengthAnalysis from './TokenLengthAnalysis';
 import BeforeAfterComparison from './BeforeAfterComparison';
+import SimilarityMatrix from './SimilarityMatrix';
+import WordCloud from './WordCloud';
+import TabContainer, { Tab } from './TabContainer';
 import styles from './DropoutVisualizer.module.css';
 
-function getTokenCount(caption: string, separator: string): number {
+function getTokenCount(caption: string, separator: string | string[]): number {
+  if (Array.isArray(separator)) {
+    let tokens = [caption];
+    
+    // Apply each separator sequentially
+    for (const sep of separator) {
+      const newTokens: string[] = [];
+      for (const token of tokens) {
+        newTokens.push(...token.split(sep));
+      }
+      tokens = newTokens;
+    }
+    
+    return tokens.filter(token => token.trim()).length;
+  }
+  
   return caption.split(separator).filter(token => token.trim()).length;
 }
 
 function TokenStats(props: { 
   caption: string, 
   results: string[], 
-  separator: string,
+  separator: string | string[],
   operation: 'dropout' | 'shuffle' | 'both'
 }) {
   const originalCount = getTokenCount(props.caption, props.separator);
@@ -85,10 +103,11 @@ const getOperationName = (type: 'dropout' | 'shuffle' | 'both') => {
 export default function DropoutVisualizer() {
   const [datasetPath, setDatasetPath] = createSignal('/home/kade/diffusion/datasets/fd');
   const [dropoutRate, setDropoutRate] = createSignal(0.60);
-  const [stepCount, setStepCount] = createSignal(1500);
+  const [stepCount, setStepCount] = createSignal(50);
   const [keepTokens, setKeepTokens] = createSignal(1);
   const [keepTokensSeparator, setKeepTokensSeparator] = createSignal('|||');
-  const [captionSeparator, setCaptionSeparator] = createSignal(',');
+  const [captionSeparators, setCaptionSeparators] = createSignal<string[]>([',']);
+  const [newSeparator, setNewSeparator] = createSignal('');
   const [seed, setSeed] = createSignal<number | undefined>(undefined);
   const [useSeed, setUseSeed] = createSignal(false);
   const [operationType, setOperationType] = createSignal<'dropout' | 'shuffle' | 'both'>('dropout');
@@ -106,6 +125,26 @@ export default function DropoutVisualizer() {
   // Function to detect system theme preference
   const detectSystemTheme = () => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  // Function to add a separator
+  const addSeparator = () => {
+    const separator = newSeparator().trim();
+    if (separator && !captionSeparators().includes(separator)) {
+      setCaptionSeparators([...captionSeparators(), separator]);
+      setNewSeparator('');
+    }
+  };
+
+  // Function to remove a separator
+  const removeSeparator = (index: number) => {
+    const separators = [...captionSeparators()];
+    separators.splice(index, 1);
+    if (separators.length === 0) {
+      // Always keep at least one separator
+      separators.push(',');
+    }
+    setCaptionSeparators(separators);
   };
 
   // Function to apply theme
@@ -195,7 +234,7 @@ export default function DropoutVisualizer() {
           stepCount(),
           keepTokens(),
           keepTokensSeparator(),
-          captionSeparator(),
+          captionSeparators(),
           seedValue
         );
         break;
@@ -206,7 +245,7 @@ export default function DropoutVisualizer() {
           stepCount(),
           keepTokens(),
           keepTokensSeparator(),
-          captionSeparator(),
+          captionSeparators(),
           seedValue
         );
         break;
@@ -218,7 +257,7 @@ export default function DropoutVisualizer() {
           stepCount(),
           keepTokens(),
           keepTokensSeparator(),
-          captionSeparator(),
+          captionSeparators(),
           seedValue
         );
         break;
@@ -247,7 +286,7 @@ export default function DropoutVisualizer() {
           caption,
           keepTokens(),
           keepTokensSeparator(),
-          captionSeparator(),
+          captionSeparators(),
           seedValue
         );
         break;
@@ -257,7 +296,7 @@ export default function DropoutVisualizer() {
           dropoutRate(),
           keepTokens(),
           keepTokensSeparator(),
-          captionSeparator(),
+          captionSeparators(),
           seedValue
         );
         break;
@@ -268,7 +307,7 @@ export default function DropoutVisualizer() {
           dropoutRate(),
           keepTokens(),
           keepTokensSeparator(),
-          captionSeparator(),
+          captionSeparators(),
           seedValue
         );
         break;
@@ -422,7 +461,7 @@ export default function DropoutVisualizer() {
             id="stepCount"
             type="number"
             min="1"
-            max="2000"
+            max="100"
             value={stepCount()}
             onInput={(e) => setStepCount(parseInt(e.target.value))}
           />
@@ -450,13 +489,39 @@ export default function DropoutVisualizer() {
         </div>
 
         <div class={styles.settingGroup}>
-          <label for="captionSeparator">Caption Separator:</label>
-          <input
-            id="captionSeparator"
-            type="text"
-            value={captionSeparator()}
-            onInput={(e) => setCaptionSeparator(e.target.value)}
-          />
+          <label>Caption Separators:</label>
+          <div class={styles.separatorsList}>
+            <For each={captionSeparators()}>
+              {(separator, index) => (
+                <div class={styles.separatorItem}>
+                  <span class={styles.separatorText}>"{separator}"</span>
+                  <button 
+                    class={styles.separatorRemoveBtn}
+                    onClick={() => removeSeparator(index())}
+                    disabled={captionSeparators().length === 1}
+                    title="Remove separator"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </For>
+            <div class={styles.addSeparatorControl}>
+              <input
+                type="text"
+                value={newSeparator()}
+                onInput={(e) => setNewSeparator(e.target.value)}
+                placeholder="Add new separator"
+              />
+              <button 
+                onClick={addSeparator}
+                disabled={!newSeparator().trim()}
+                title="Add separator"
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class={styles.settingGroup}>
@@ -585,37 +650,87 @@ export default function DropoutVisualizer() {
             <TokenStats 
               caption={selectedCaption()!.caption}
               results={dropoutResults()}
-              separator={captionSeparator()}
+              separator={captionSeparators()}
               operation={operationType()}
             />
             
             <Show when={dropoutResults().length > 1}>
-              <TokenFrequencyChart
-                caption={selectedCaption()!.caption}
-                results={dropoutResults()}
-                separator={captionSeparator()}
+              <TabContainer
                 theme={isDarkMode() ? 'dark' : 'light'}
-              />
-              
-              <TokenHeatmap
-                caption={selectedCaption()!.caption}
-                results={dropoutResults()}
-                separator={captionSeparator()}
-                theme={isDarkMode() ? 'dark' : 'light'}
-              />
-              
-              <PositionAnalysisChart
-                caption={selectedCaption()!.caption}
-                results={dropoutResults()}
-                separator={captionSeparator()}
-                theme={isDarkMode() ? 'dark' : 'light'}
-              />
-              
-              <TokenLengthAnalysis
-                caption={selectedCaption()!.caption}
-                results={dropoutResults()}
-                separator={captionSeparator()}
-                theme={isDarkMode() ? 'dark' : 'light'}
+                tabs={[
+                  {
+                    id: 'frequency',
+                    label: 'Token Frequency',
+                    content: (
+                      <TokenFrequencyChart
+                        caption={selectedCaption()!.caption}
+                        results={dropoutResults()}
+                        separator={captionSeparators()[0]}
+                        theme={isDarkMode() ? 'dark' : 'light'}
+                      />
+                    )
+                  },
+                  {
+                    id: 'heatmap',
+                    label: 'Presence Heatmap',
+                    content: (
+                      <TokenHeatmap
+                        caption={selectedCaption()!.caption}
+                        results={dropoutResults()}
+                        separator={captionSeparators()[0]}
+                        theme={isDarkMode() ? 'dark' : 'light'}
+                      />
+                    )
+                  },
+                  {
+                    id: 'position',
+                    label: 'Position Analysis',
+                    content: (
+                      <PositionAnalysisChart
+                        caption={selectedCaption()!.caption}
+                        results={dropoutResults()}
+                        separator={captionSeparators()[0]}
+                        theme={isDarkMode() ? 'dark' : 'light'}
+                      />
+                    )
+                  },
+                  {
+                    id: 'length',
+                    label: 'Token Length',
+                    content: (
+                      <TokenLengthAnalysis
+                        caption={selectedCaption()!.caption}
+                        results={dropoutResults()}
+                        separator={captionSeparators()[0]}
+                        theme={isDarkMode() ? 'dark' : 'light'}
+                      />
+                    )
+                  },
+                  {
+                    id: 'similarity',
+                    label: 'Similarity Matrix',
+                    content: (
+                      <SimilarityMatrix
+                        results={dropoutResults()}
+                        separator={captionSeparators()[0]}
+                        theme={isDarkMode() ? 'dark' : 'light'}
+                        maxResults={10}
+                      />
+                    )
+                  },
+                  {
+                    id: 'wordcloud',
+                    label: 'Word Cloud',
+                    content: (
+                      <WordCloud
+                        caption={selectedCaption()!.caption}
+                        results={dropoutResults()}
+                        separator={captionSeparators()[0]}
+                        theme={isDarkMode() ? 'dark' : 'light'}
+                      />
+                    )
+                  }
+                ]}
               />
             </Show>
           </Show>
@@ -631,7 +746,7 @@ export default function DropoutVisualizer() {
                     <BeforeAfterComparison
                       caption={selectedCaption()!.caption}
                       result={result}
-                      separator={captionSeparator()}
+                      separator={captionSeparators()[0]}
                       theme={isDarkMode() ? 'dark' : 'light'}
                     />
                   </div>

@@ -547,4 +547,105 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+/* Tab styles */
+.tabContainer {
+  margin-bottom: 2rem;
+  background-color: var(--panel-bg);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tabHeader {
+  display: flex;
+  border-bottom: 1px solid var(--input-border);
+  background-color: var(--bg-secondary);
+  overflow-x: auto;
+}
+
+.tabButton {
+  padding: 0.8rem 1.2rem;
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-color);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme='dark'] .tabButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.tabButton.activeTab {
+  border-bottom-color: var(--button-bg);
+  color: var(--button-bg);
+  background-color: var(--bg-primary);
+}
+
+.tabContent {
+  padding: 1rem;
+}
+
+.tabPanel {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Word cloud styles */
+.wordCloud {
+  width: 100%;
+  height: 400px;
+  position: relative;
+}
+
+/* Similarity matrix styles */
+.similarityMatrix {
+  width: 100%;
+  height: 400px;
+  overflow: auto;
+}
+
+.similarityGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 2px;
+}
+
+.similarityCell {
+  padding: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  min-height: 40px;
+}
+
+.similarityHeaderCell {
+  font-weight: bold;
+  background-color: var(--bg-secondary);
+}
+
+.noDataMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  color: var(--caption-preview);
+  font-style: italic;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px dashed var(--input-border);
 } 
