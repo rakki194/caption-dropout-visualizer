@@ -128,6 +128,52 @@ export function shuffleCaption(
 }
 
 /**
+ * Applies both dropout and shuffle to a caption
+ * 
+ * @param originalCaption The caption text to process
+ * @param dropoutRate The probability of dropping out individual tags (0 to 1)
+ * @param keepTokens Number of tokens to keep at beginning (won't be dropped or shuffled)
+ * @param keepTokensSeparator Separator for keep tokens sections
+ * @param captionSeparator Separator used between caption tokens
+ * @param seed Optional seed for deterministic results
+ * @returns Processed caption after both dropout and shuffle
+ */
+export function applyBothDropoutAndShuffle(
+  originalCaption: string,
+  dropoutRate: number,
+  keepTokens: number = 1,
+  keepTokensSeparator: string = '|||',
+  captionSeparator: string = ',',
+  seed?: number
+): string {
+  // Create two seed values from the original seed
+  let dropoutSeed, shuffleSeed;
+  if (seed !== undefined) {
+    const rng = seedrandom(String(seed));
+    dropoutSeed = Math.floor(rng() * 1_000_000_000);
+    shuffleSeed = Math.floor(rng() * 1_000_000_000);
+  }
+  
+  // First apply dropout, then shuffle the result
+  const captionAfterDropout = applyCaptionDropout(
+    originalCaption,
+    dropoutRate,
+    keepTokens,
+    keepTokensSeparator,
+    captionSeparator,
+    dropoutSeed
+  );
+  
+  return shuffleCaption(
+    captionAfterDropout,
+    keepTokens,
+    keepTokensSeparator,
+    captionSeparator,
+    shuffleSeed
+  );
+}
+
+/**
  * Simulates caption dropout steps for visualization
  * 
  * @param originalCaption The original caption
@@ -209,6 +255,54 @@ export function simulateShuffleSteps(
     results.push(
       shuffleCaption(
         originalCaption,
+        keepTokens,
+        keepTokensSeparator,
+        captionSeparator,
+        stepSeed
+      )
+    );
+  }
+  
+  return results;
+}
+
+/**
+ * Simulates combined dropout and shuffle steps for visualization
+ * 
+ * @param originalCaption The original caption
+ * @param dropoutRate The dropout rate to apply
+ * @param steps How many simulated steps to run
+ * @param keepTokens Number of tokens to keep at beginning
+ * @param keepTokensSeparator Separator for keep tokens sections
+ * @param captionSeparator Separator used between caption tokens
+ * @param seed Optional seed for deterministic results
+ * @returns Array of resulting captions after each step with both operations applied
+ */
+export function simulateBothOperationsSteps(
+  originalCaption: string,
+  dropoutRate: number,
+  steps: number = 1500,
+  keepTokens: number = 1,
+  keepTokensSeparator: string = '|||',
+  captionSeparator: string = ',',
+  seed?: number
+): string[] {
+  const results: string[] = [];
+  
+  // Create seeded RNG
+  const mainRng = seed !== undefined ? seedrandom(String(seed)) : Math.random;
+  
+  // Generate a new seed for each step derived from the main seed
+  for (let step = 0; step < steps; step++) {
+    // If seed is provided, create deterministic seeds for each step
+    const stepSeed = seed !== undefined ? 
+      Math.floor(mainRng() * 1_000_000_000) : 
+      undefined;
+    
+    results.push(
+      applyBothDropoutAndShuffle(
+        originalCaption,
+        dropoutRate,
         keepTokens,
         keepTokensSeparator,
         captionSeparator,

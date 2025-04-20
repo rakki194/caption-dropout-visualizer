@@ -1,5 +1,12 @@
 import { createSignal, createEffect, For, Show, onMount } from 'solid-js';
-import { applyCaptionDropout, simulateDropoutSteps, shuffleCaption, simulateShuffleSteps } from '../utils/captionDropout';
+import { 
+  applyCaptionDropout, 
+  simulateDropoutSteps, 
+  shuffleCaption, 
+  simulateShuffleSteps,
+  applyBothDropoutAndShuffle,
+  simulateBothOperationsSteps
+} from '../utils/captionDropout';
 import { fetchCaptionFiles, CaptionFile } from '../utils/datasetLoader';
 import TokenFrequencyChart from './TokenFrequencyChart';
 import styles from './DropoutVisualizer.module.css';
@@ -12,7 +19,7 @@ function TokenStats(props: {
   caption: string, 
   results: string[], 
   separator: string,
-  operation: 'dropout' | 'shuffle'
+  operation: 'dropout' | 'shuffle' | 'both'
 }) {
   const originalCount = getTokenCount(props.caption, props.separator);
   
@@ -46,7 +53,7 @@ function TokenStats(props: {
         </div>
       </div>
       
-      <Show when={props.operation === 'shuffle'}>
+      <Show when={props.operation === 'shuffle' || props.operation === 'both'}>
         <div class={styles.statItem}>
           <div class={styles.statValue}>{uniqueResults}</div>
           <div class={styles.statLabel}>Unique Variations</div>
@@ -61,6 +68,16 @@ function TokenStats(props: {
   );
 }
 
+// Helper function to get the operation name for display
+const getOperationName = (type: 'dropout' | 'shuffle' | 'both') => {
+  switch (type) {
+    case 'dropout': return 'Dropout';
+    case 'shuffle': return 'Shuffle';
+    case 'both': return 'Dropout+Shuffle';
+    default: return 'Operation';
+  }
+};
+
 export default function DropoutVisualizer() {
   const [datasetPath, setDatasetPath] = createSignal('/home/kade/diffusion/datasets/fd');
   const [dropoutRate, setDropoutRate] = createSignal(0.60);
@@ -70,7 +87,7 @@ export default function DropoutVisualizer() {
   const [captionSeparator, setCaptionSeparator] = createSignal(',');
   const [seed, setSeed] = createSignal<number | undefined>(undefined);
   const [useSeed, setUseSeed] = createSignal(false);
-  const [enableShuffle, setEnableShuffle] = createSignal(false);
+  const [operationType, setOperationType] = createSignal<'dropout' | 'shuffle' | 'both'>('dropout');
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal('');
   const [captions, setCaptions] = createSignal<CaptionFile[]>([]);
@@ -162,28 +179,44 @@ export default function DropoutVisualizer() {
     const caption = selectedCaption()!.caption;
     const seedValue = useSeed() ? seed() : undefined;
     
-    if (enableShuffle()) {
-      const results = simulateShuffleSteps(
-        caption,
-        stepCount(),
-        keepTokens(),
-        keepTokensSeparator(),
-        captionSeparator(),
-        seedValue
-      );
-      setDropoutResults(results);
-    } else {
-      const results = simulateDropoutSteps(
-        caption,
-        dropoutRate(),
-        stepCount(),
-        keepTokens(),
-        keepTokensSeparator(),
-        captionSeparator(),
-        seedValue
-      );
-      setDropoutResults(results);
+    let results;
+    switch (operationType()) {
+      case 'shuffle':
+        results = simulateShuffleSteps(
+          caption,
+          stepCount(),
+          keepTokens(),
+          keepTokensSeparator(),
+          captionSeparator(),
+          seedValue
+        );
+        break;
+      case 'both':
+        results = simulateBothOperationsSteps(
+          caption,
+          dropoutRate(),
+          stepCount(),
+          keepTokens(),
+          keepTokensSeparator(),
+          captionSeparator(),
+          seedValue
+        );
+        break;
+      case 'dropout':
+      default:
+        results = simulateDropoutSteps(
+          caption,
+          dropoutRate(),
+          stepCount(),
+          keepTokens(),
+          keepTokensSeparator(),
+          captionSeparator(),
+          seedValue
+        );
+        break;
     }
+    
+    setDropoutResults(results);
     
     // Automatically show stats when results are available
     setShowStats(true);
@@ -196,23 +229,37 @@ export default function DropoutVisualizer() {
     const seedValue = useSeed() ? seed() : undefined;
     
     let result;
-    if (enableShuffle()) {
-      result = shuffleCaption(
-        caption,
-        keepTokens(),
-        keepTokensSeparator(),
-        captionSeparator(),
-        seedValue
-      );
-    } else {
-      result = applyCaptionDropout(
-        caption,
-        dropoutRate(),
-        keepTokens(),
-        keepTokensSeparator(),
-        captionSeparator(),
-        seedValue
-      );
+    switch (operationType()) {
+      case 'shuffle':
+        result = shuffleCaption(
+          caption,
+          keepTokens(),
+          keepTokensSeparator(),
+          captionSeparator(),
+          seedValue
+        );
+        break;
+      case 'both':
+        result = applyBothDropoutAndShuffle(
+          caption,
+          dropoutRate(),
+          keepTokens(),
+          keepTokensSeparator(),
+          captionSeparator(),
+          seedValue
+        );
+        break;
+      case 'dropout':
+      default:
+        result = applyCaptionDropout(
+          caption,
+          dropoutRate(),
+          keepTokens(),
+          keepTokensSeparator(),
+          captionSeparator(),
+          seedValue
+        );
+        break;
     }
     
     setDropoutResults([result]);
@@ -321,21 +368,27 @@ export default function DropoutVisualizer() {
           <label for="operationType">Operation Type:</label>
           <div class={styles.toggleSwitch}>
             <button 
-              class={`${styles.toggleButton} ${!enableShuffle() ? styles.active : ''}`}
-              onClick={() => setEnableShuffle(false)}
+              class={`${styles.toggleButton} ${operationType() === 'dropout' ? styles.active : ''}`}
+              onClick={() => setOperationType('dropout')}
             >
               Dropout
             </button>
             <button 
-              class={`${styles.toggleButton} ${enableShuffle() ? styles.active : ''}`}
-              onClick={() => setEnableShuffle(true)}
+              class={`${styles.toggleButton} ${operationType() === 'shuffle' ? styles.active : ''}`}
+              onClick={() => setOperationType('shuffle')}
             >
               Shuffle
+            </button>
+            <button 
+              class={`${styles.toggleButton} ${operationType() === 'both' ? styles.active : ''}`}
+              onClick={() => setOperationType('both')}
+            >
+              Both
             </button>
           </div>
         </div>
 
-        <Show when={!enableShuffle()}>
+        <Show when={operationType() !== 'shuffle'}>
           <div class={styles.settingGroup}>
             <label for="dropoutRate">Dropout Rate:</label>
             <input
@@ -423,10 +476,10 @@ export default function DropoutVisualizer() {
 
         <div class={styles.buttonGroup}>
           <button onClick={handleSingleOperation} disabled={!selectedCaption()}>
-            Run Single {enableShuffle() ? 'Shuffle' : 'Dropout'}
+            Run Single {getOperationName(operationType())}
           </button>
           <button onClick={handleDropoutVisualization} disabled={!selectedCaption()}>
-            Visualize {enableShuffle() ? 'Shuffle' : 'Dropout'} Steps
+            Visualize {getOperationName(operationType())} Steps
           </button>
         </div>
       </div>
@@ -506,14 +559,14 @@ export default function DropoutVisualizer() {
 
       <Show when={dropoutResults().length > 0}>
         <div class={styles.resultsContainer}>
-          <h2>{enableShuffle() ? 'Shuffle' : 'Dropout'} Results ({dropoutResults().length} step{dropoutResults().length > 1 ? 's' : ''})</h2>
+          <h2>{getOperationName(operationType())} Results ({dropoutResults().length} step{dropoutResults().length > 1 ? 's' : ''})</h2>
           
           <Show when={showStats() && selectedCaption()}>
             <TokenStats 
               caption={selectedCaption()!.caption}
               results={dropoutResults()}
               separator={captionSeparator()}
-              operation={enableShuffle() ? 'shuffle' : 'dropout'}
+              operation={operationType()}
             />
             
             <Show when={dropoutResults().length > 1}>
