@@ -23,6 +23,11 @@ export function applyCaptionDropout(
   captionSeparator: string = ',',
   seed?: number
 ): string {
+  // Debug info
+  if (seed !== undefined) {
+    console.log('applyCaptionDropout with seed:', seed, 'type:', typeof seed);
+  }
+
   // Trim whitespace
   const trimmedCaption = originalCaption.trim();
 
@@ -80,6 +85,11 @@ export function shuffleCaption(
   captionSeparator: string = ',',
   seed?: number
 ): string {
+  // Debug info
+  if (seed !== undefined) {
+    console.log('shuffleCaption with seed:', seed, 'type:', typeof seed);
+  }
+
   // Trim whitespace
   const trimmedCaption = originalCaption.trim();
 
@@ -196,6 +206,8 @@ export function simulateDropoutSteps(
 ): string[] {
   const results: string[] = [];
   
+  console.log('simulateDropoutSteps called with seed:', seed, 'type:', typeof seed);
+  
   // Create seeded RNG
   const mainRng = seed !== undefined ? seedrandom(String(seed)) : Math.random;
   
@@ -205,6 +217,10 @@ export function simulateDropoutSteps(
     const stepSeed = seed !== undefined ? 
       Math.floor(mainRng() * 1_000_000_000) : 
       undefined;
+    
+    if (step === 0) {
+      console.log('First step seed:', stepSeed);
+    }
     
     results.push(
       applyCaptionDropout(

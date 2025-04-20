@@ -9,6 +9,10 @@ import {
 } from '../utils/captionDropout';
 import { fetchCaptionFiles, CaptionFile } from '../utils/datasetLoader';
 import TokenFrequencyChart from './TokenFrequencyChart';
+import TokenHeatmap from './TokenHeatmap';
+import PositionAnalysisChart from './PositionAnalysisChart';
+import TokenLengthAnalysis from './TokenLengthAnalysis';
+import BeforeAfterComparison from './BeforeAfterComparison';
 import styles from './DropoutVisualizer.module.css';
 
 function getTokenCount(caption: string, separator: string): number {
@@ -177,7 +181,11 @@ export default function DropoutVisualizer() {
     if (!selectedCaption()) return;
     
     const caption = selectedCaption()!.caption;
-    const seedValue = useSeed() ? seed() : undefined;
+    // Ensure we have a proper number for the seed
+    const rawSeed = seed();
+    const seedValue = useSeed() ? (rawSeed !== undefined ? Number(rawSeed) : undefined) : undefined;
+    
+    console.log('Using seed value:', seedValue, 'type:', typeof seedValue);
     
     let results;
     switch (operationType()) {
@@ -226,7 +234,11 @@ export default function DropoutVisualizer() {
     if (!selectedCaption()) return;
     
     const caption = selectedCaption()!.caption;
-    const seedValue = useSeed() ? seed() : undefined;
+    // Ensure we have a proper number for the seed
+    const rawSeed = seed();
+    const seedValue = useSeed() ? (rawSeed !== undefined ? Number(rawSeed) : undefined) : undefined;
+    
+    console.log('Single operation using seed value:', seedValue, 'type:', typeof seedValue);
     
     let result;
     switch (operationType()) {
@@ -459,7 +471,15 @@ export default function DropoutVisualizer() {
             <input
               type="number"
               value={seed() !== undefined ? seed() : ''}
-              onInput={(e) => setSeed(e.target.value ? parseInt(e.target.value) : undefined)}
+              onInput={(e) => {
+                const val = e.target.value;
+                if (val === '') {
+                  setSeed(undefined);
+                } else {
+                  setSeed(Number(val));
+                  console.log('Seed set to:', Number(val), 'type:', typeof Number(val));
+                }
+              }}
               disabled={!useSeed()}
               placeholder="Enter seed"
             />
@@ -576,6 +596,27 @@ export default function DropoutVisualizer() {
                 separator={captionSeparator()}
                 theme={isDarkMode() ? 'dark' : 'light'}
               />
+              
+              <TokenHeatmap
+                caption={selectedCaption()!.caption}
+                results={dropoutResults()}
+                separator={captionSeparator()}
+                theme={isDarkMode() ? 'dark' : 'light'}
+              />
+              
+              <PositionAnalysisChart
+                caption={selectedCaption()!.caption}
+                results={dropoutResults()}
+                separator={captionSeparator()}
+                theme={isDarkMode() ? 'dark' : 'light'}
+              />
+              
+              <TokenLengthAnalysis
+                caption={selectedCaption()!.caption}
+                results={dropoutResults()}
+                separator={captionSeparator()}
+                theme={isDarkMode() ? 'dark' : 'light'}
+              />
             </Show>
           </Show>
           
@@ -584,6 +625,17 @@ export default function DropoutVisualizer() {
               <div class={styles.resultItem}>
                 <div class={styles.resultHeader}>Step {index() + 1}</div>
                 <pre>{result}</pre>
+                
+                <Show when={index() === 0}>
+                  <div style={{ "margin-top": "1.5rem", "border-top": "1px dashed #ccc", "padding-top": "1rem" }}>
+                    <BeforeAfterComparison
+                      caption={selectedCaption()!.caption}
+                      result={result}
+                      separator={captionSeparator()}
+                      theme={isDarkMode() ? 'dark' : 'light'}
+                    />
+                  </div>
+                </Show>
               </div>
             )}
           </For>
