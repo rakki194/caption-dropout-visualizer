@@ -239,8 +239,8 @@ export function simulateDropoutSteps(
   // Generate a different seed for each step if an initial seed is provided
   const baseSeed = seed !== undefined ? seed : Math.floor(Math.random() * 1000000);
   
-  // Limit to a safer number of steps to prevent UI hangs
-  const safeStepCount = Math.min(steps, 100);
+  // Limit to a safer number of steps to prevent UI hangs (set a high cap, e.g., 1000)
+  const safeStepCount = Math.min(steps, 1000);
   
   for (let i = 0; i < safeStepCount; i++) {
     // Use a deterministic but unique seed for each step
@@ -283,8 +283,8 @@ export function simulateShuffleSteps(
   // Generate a different seed for each step if an initial seed is provided
   const baseSeed = seed !== undefined ? seed : Math.floor(Math.random() * 1000000);
   
-  // Limit to a safer number of steps to prevent UI hangs
-  const safeStepCount = Math.min(steps, 100);
+  // Limit to a safer number of steps to prevent UI hangs (set a high cap, e.g., 1000)
+  const safeStepCount = Math.min(steps, 1000);
   
   for (let i = 0; i < safeStepCount; i++) {
     // Use a deterministic but unique seed for each step
@@ -328,8 +328,8 @@ export function simulateBothOperationsSteps(
   // Generate a different seed for each step if an initial seed is provided
   const baseSeed = seed !== undefined ? seed : Math.floor(Math.random() * 1000000);
   
-  // Limit to a safer number of steps to prevent UI hangs
-  const safeStepCount = Math.min(steps, 100);
+  // Limit to a safer number of steps to prevent UI hangs (set a high cap, e.g., 1000)
+  const safeStepCount = Math.min(steps, 1000);
   
   for (let i = 0; i < safeStepCount; i++) {
     // Use a deterministic but unique seed for each step

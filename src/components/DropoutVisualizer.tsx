@@ -462,7 +462,6 @@ export default function DropoutVisualizer() {
             id="stepCount"
             type="number"
             min="1"
-            max="100"
             value={stepCount()}
             onInput={(e) => setStepCount(parseInt(e.target.value))}
           />
@@ -737,9 +736,27 @@ export default function DropoutVisualizer() {
           </Show>
           
           <div class={styles.pagination}>
+            <button onClick={() => setCurrentStep(0)} disabled={currentStep() === 0} title="First Step">First</button>
             <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep() === 0}>&lt; Prev</button>
-            <span class={styles.pageInfo}>Step {currentStep() + 1} / {dropoutResults().length}</span>
+            <span class={styles.pageInfo}>
+              Step
+              <input
+                type="number"
+                min={1}
+                max={dropoutResults().length}
+                value={currentStep() + 1}
+                style={{ width: '4em', 'margin': '0 0.5em' }}
+                onInput={e => {
+                  const val = parseInt(e.currentTarget.value);
+                  if (!isNaN(val) && val >= 1 && val <= dropoutResults().length) {
+                    setCurrentStep(val - 1);
+                  }
+                }}
+              />
+              / {dropoutResults().length}
+            </span>
             <button onClick={() => setCurrentStep(s => Math.min(dropoutResults().length - 1, s + 1))} disabled={currentStep() === dropoutResults().length - 1}>Next &gt;</button>
+            <button onClick={() => setCurrentStep(dropoutResults().length - 1)} disabled={currentStep() === dropoutResults().length - 1} title="Last Step">Last</button>
           </div>
           
           <div style={{ "margin-top": "1.5rem", "border-top": "1px dashed #ccc", "padding-top": "1rem" }}>
