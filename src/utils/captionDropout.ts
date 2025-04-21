@@ -68,31 +68,16 @@ export function applyCaptionDropout(
     originalCaption.split(captionSeparator).map(t => t.trim()).filter(t => t);
   
   if (tokens.length === 0) return '';
-  
-  // Handle keep tokens
-  let tokensToKeep: string[] = [];
-  if (keepTokens > 0 && keepTokensSeparator) {
-    // Escape special regex characters in the keepTokensSeparator
-    const escapedSeparator = keepTokensSeparator.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const keepTokensRegex = new RegExp(`${escapedSeparator}([^${escapedSeparator}]+)${escapedSeparator}`, 'g');
-    let match;
-    while ((match = keepTokensRegex.exec(originalCaption)) !== null) {
-      if (match[1]) tokensToKeep.push(match[1].trim());
-    }
-  }
-  
-  // Apply dropout to each token
-  const newTokens = tokens.filter(token => {
-    // Always keep tokens marked for preservation
-    if (tokensToKeep.some(keepToken => token.includes(keepToken))) {
-      return true;
-    }
-    // Apply random dropout
-    return rng() > dropoutRate;
-  });
-  
+
+  // Always keep the first N tokens
+  const fixedTokens = tokens.slice(0, keepTokens);
+  const flexTokens = tokens.slice(keepTokens);
+
+  // Apply dropout to flex tokens only
+  const droppedFlexTokens = flexTokens.filter(token => rng() > dropoutRate);
+
   // Return the new caption
-  return newTokens.join(primarySeparator);
+  return [...fixedTokens, ...droppedFlexTokens].join(primarySeparator);
 }
 
 /**
@@ -129,49 +114,19 @@ export function shuffleCaption(
     originalCaption.split(captionSeparator).map(t => t.trim()).filter(t => t);
   
   if (tokens.length === 0) return '';
-  
-  // Handle keep tokens
-  let tokensToKeep: { token: string; index: number }[] = [];
-  if (keepTokens > 0 && keepTokensSeparator) {
-    // Escape special regex characters in the keepTokensSeparator
-    const escapedSeparator = keepTokensSeparator.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const keepTokensRegex = new RegExp(`${escapedSeparator}([^${escapedSeparator}]+)${escapedSeparator}`, 'g');
-    let match;
-    while ((match = keepTokensRegex.exec(originalCaption)) !== null) {
-      if (match[1]) {
-        const keepToken = match[1].trim();
-        for (let i = 0; i < tokens.length; i++) {
-          if (tokens[i].includes(keepToken)) {
-            tokensToKeep.push({ token: tokens[i], index: i });
-            break;
-          }
-        }
-      }
-    }
-  }
-  
-  // Save the tokens that need to stay in their positions
-  const keepPositions = tokensToKeep.map(item => item.index);
-  const tokensToShuffle = tokens.filter((_, index) => !keepPositions.includes(index));
-  
-  // Shuffle the remaining tokens
-  for (let i = tokensToShuffle.length - 1; i > 0; i--) {
+
+  // Always keep the first N tokens
+  const fixedTokens = tokens.slice(0, keepTokens);
+  const flexTokens = tokens.slice(keepTokens);
+
+  // Shuffle the flex tokens
+  for (let i = flexTokens.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
-    [tokensToShuffle[i], tokensToShuffle[j]] = [tokensToShuffle[j], tokensToShuffle[i]];
+    [flexTokens[i], flexTokens[j]] = [flexTokens[j], flexTokens[i]];
   }
-  
-  // Reconstruct the caption, keeping specific tokens in their original positions
-  const newTokens = [...tokens];
-  let shuffleIndex = 0;
-  
-  for (let i = 0; i < newTokens.length; i++) {
-    if (!keepPositions.includes(i)) {
-      newTokens[i] = tokensToShuffle[shuffleIndex++];
-    }
-  }
-  
+
   // Return the new caption
-  return newTokens.join(primarySeparator);
+  return [...fixedTokens, ...flexTokens].join(primarySeparator);
 }
 
 /**
@@ -193,24 +148,39 @@ export function applyBothDropoutAndShuffle(
   captionSeparator: string | string[] = ',',
   seed?: number
 ): string {
-  // First apply dropout
-  const droppedCaption = applyCaptionDropout(
-    originalCaption, 
-    dropoutRate, 
-    keepTokens, 
-    keepTokensSeparator, 
-    captionSeparator, 
-    seed
-  );
-  
-  // Then shuffle what remains
-  return shuffleCaption(
-    droppedCaption, 
-    keepTokens, 
-    keepTokensSeparator, 
-    captionSeparator, 
-    seed
-  );
+  // Handle empty captions
+  if (!originalCaption || !originalCaption.trim()) return '';
+
+  // Determine primary separator and process caption
+  const primarySeparator = Array.isArray(captionSeparator) ? 
+    (captionSeparator.length > 0 ? captionSeparator[0] : ',') : 
+    captionSeparator;
+
+  // Split caption into tokens based on separator(s)
+  const tokens = Array.isArray(captionSeparator) ?
+    splitByMultipleSeparators(originalCaption, captionSeparator) :
+    originalCaption.split(captionSeparator).map(t => t.trim()).filter(t => t);
+
+  if (tokens.length === 0) return '';
+
+  // Always keep the first N tokens
+  const fixedTokens = tokens.slice(0, keepTokens);
+  const flexTokens = tokens.slice(keepTokens);
+
+  // Setup RNG with seed if provided
+  const rng = seed !== undefined ? seedrandom(seed.toString()) : Math.random;
+
+  // Apply dropout to flex tokens only
+  const droppedFlexTokens = flexTokens.filter(token => rng() > dropoutRate);
+
+  // Shuffle the remaining flex tokens
+  for (let i = droppedFlexTokens.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [droppedFlexTokens[i], droppedFlexTokens[j]] = [droppedFlexTokens[j], droppedFlexTokens[i]];
+  }
+
+  // Return the new caption
+  return [...fixedTokens, ...droppedFlexTokens].join(primarySeparator);
 }
 
 /**
