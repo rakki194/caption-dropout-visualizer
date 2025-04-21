@@ -7,6 +7,7 @@ import {
   applyBothDropoutAndShuffle,
   simulateBothOperationsSteps
 } from '../utils/captionDropout';
+import { processWolfCaption, splitWolfCaption } from '../utils/wolfCaptions';
 import { fetchCaptionFiles, CaptionFile } from '../utils/datasetLoader';
 import TokenFrequencyChart from './TokenFrequencyChart';
 import TokenHeatmap from './TokenHeatmap';
@@ -122,6 +123,7 @@ export default function DropoutVisualizer() {
   const [currentPage, setCurrentPage] = createSignal(1);
   const [itemsPerPage, setItemsPerPage] = createSignal(50);
   const [currentStep, setCurrentStep] = createSignal(0);
+  const [useWolfCaptions, setUseWolfCaptions] = createSignal(false);
 
   // Function to detect system theme preference
   const detectSystemTheme = () => {
@@ -217,11 +219,21 @@ export default function DropoutVisualizer() {
     }
   };
 
+  const preprocessCaption = (caption: string): string => {
+    if (useWolfCaptions()) {
+      return processWolfCaption(caption);
+    }
+    return caption;
+  };
+
   const handleDropoutVisualization = () => {
     if (!selectedCaption()) return;
     
-    const caption = selectedCaption()!.caption;
-    // Ensure we have a proper number for the seed
+    let caption = selectedCaption()!.caption;
+    if (useWolfCaptions()) {
+      caption = processWolfCaption(caption);
+    }
+    
     const rawSeed = seed();
     const seedValue = useSeed() ? (rawSeed !== undefined ? Number(rawSeed) : undefined) : undefined;
     
@@ -266,15 +278,17 @@ export default function DropoutVisualizer() {
     
     setDropoutResults(results);
     
-    // Automatically show stats when results are available
     setShowStats(true);
   };
 
   const handleSingleOperation = () => {
     if (!selectedCaption()) return;
     
-    const caption = selectedCaption()!.caption;
-    // Ensure we have a proper number for the seed
+    let caption = selectedCaption()!.caption;
+    if (useWolfCaptions()) {
+      caption = processWolfCaption(caption);
+    }
+    
     const rawSeed = seed();
     const seedValue = useSeed() ? (rawSeed !== undefined ? Number(rawSeed) : undefined) : undefined;
     
@@ -316,7 +330,6 @@ export default function DropoutVisualizer() {
     
     setDropoutResults([result]);
     
-    // Show stats for single operation too
     setShowStats(true);
   };
 
@@ -439,6 +452,31 @@ export default function DropoutVisualizer() {
             </button>
           </div>
         </div>
+
+        <div class={styles.settingGroup}>
+          <label for="useWolfCaptions">Wolf Captions:</label>
+          <div class={styles.toggleSwitch}>
+            <button 
+              class={`${styles.toggleButton} ${!useWolfCaptions() ? styles.active : ''}`}
+              onClick={() => setUseWolfCaptions(false)}
+            >
+              Standard
+            </button>
+            <button 
+              class={`${styles.toggleButton} ${useWolfCaptions() ? styles.active : ''}`}
+              onClick={() => setUseWolfCaptions(true)}
+            >
+              Wolf Captions (.«comma)
+            </button>
+          </div>
+        </div>
+
+        <Show when={useWolfCaptions()}>
+          <div class={styles.helpText}>
+            Wolf Captions mode adds a comma after each sentence-ending period while preserving common abbreviations.
+            This enables better sentence boundary detection for training.
+          </div>
+        </Show>
 
         <Show when={operationType() !== 'shuffle'}>
           <div class={styles.settingGroup}>
@@ -635,7 +673,17 @@ export default function DropoutVisualizer() {
         </Show>
       </div>
 
-      <Show when={selectedCaption()}>
+      <Show when={selectedCaption() && useWolfCaptions()}>
+        <div class={styles.originalCaption}>
+          <h2>Original Caption</h2>
+          <pre>{selectedCaption()?.caption}</pre>
+          
+          <h3>Wolf Caption (With Sentence Separators)</h3>
+          <pre class={styles.wolfCaption}>{processWolfCaption(selectedCaption()!.caption)}</pre>
+        </div>
+      </Show>
+
+      <Show when={selectedCaption() && !useWolfCaptions()}>
         <div class={styles.originalCaption}>
           <h2>Original Caption</h2>
           <pre>{selectedCaption()?.caption}</pre>

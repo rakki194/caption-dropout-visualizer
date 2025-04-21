@@ -24,6 +24,11 @@
   --result-header: #4a7dff;
   --bg-primary: #f9f9f9;
   --bg-secondary: #f0f0f0;
+  --wolfcaption-bg: #f5faff;
+  --wolfcaption-border: #bdd6f9;
+  --helptext-bg: #f5f7fa;
+  --helptext-border: #d0d9e4;
+  --helptext-color: #4a5568;
 }
 
 /* Dark theme */
@@ -51,6 +56,11 @@ html[data-theme='dark'] {
   --result-header: #5d8bff;
   --bg-primary: #1a1a1a;
   --bg-secondary: #2a2a2a;
+  --wolfcaption-bg: #1d2940;
+  --wolfcaption-border: #2a4377;
+  --helptext-bg: #252b3b;
+  --helptext-border: #2a3451;
+  --helptext-color: #9eaabf;
 }
 
 /* Theme toggle styles */
@@ -648,4 +658,37 @@ html[data-theme='dark'] .tabButton:hover {
   background-color: var(--bg-primary);
   border-radius: 8px;
   border: 1px dashed var(--input-border);
+}
+
+/* Wolf Caption styles */
+.wolfCaption {
+  background-color: var(--wolfcaption-bg);
+  border: 1px solid var(--wolfcaption-border);
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  position: relative;
+}
+
+.helpText {
+  background-color: var(--helptext-bg);
+  border: 1px solid var(--helptext-border);
+  border-radius: 4px;
+  padding: 0.8rem;
+  margin: 0.5rem 0 1.5rem;
+  color: var(--helptext-color);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Highlight period-comma in Wolf Captions */
+.wolfCaption .highlight {
+  background-color: rgba(74, 125, 255, 0.2);
+  padding: 0 2px;
+  border-radius: 2px;
 } 
