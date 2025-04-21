@@ -62,7 +62,12 @@ export default function TokenHeatmap(props: TokenHeatmapProps) {
   
   const createHeatmap = () => {
     if (!chartRef) return;
-    
+    const width = chartRef.clientWidth;
+    const height = chartRef.clientHeight;
+    if (width === 0 || height === 0) {
+      requestAnimationFrame(createHeatmap);
+      return;
+    }
     // Clean up previous chart
     if (chart) {
       chart.destroy();

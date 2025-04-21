@@ -107,7 +107,14 @@ export default function TokenLengthAnalysis(props: TokenLengthAnalysisProps) {
   
   const createCharts = () => {
     if (!chartRef || !scatterRef) return;
-    
+    const width1 = chartRef.clientWidth;
+    const height1 = chartRef.clientHeight;
+    const width2 = scatterRef.clientWidth;
+    const height2 = scatterRef.clientHeight;
+    if (width1 === 0 || height1 === 0 || width2 === 0 || height2 === 0) {
+      requestAnimationFrame(createCharts);
+      return;
+    }
     // Clean up previous charts
     if (chart) chart.destroy();
     if (scatterChart) scatterChart.destroy();

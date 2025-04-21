@@ -121,6 +121,7 @@ export default function DropoutVisualizer() {
   const [showStats, setShowStats] = createSignal(false);
   const [currentPage, setCurrentPage] = createSignal(1);
   const [itemsPerPage, setItemsPerPage] = createSignal(50);
+  const [currentStep, setCurrentStep] = createSignal(0);
 
   // Function to detect system theme preference
   const detectSystemTheme = () => {
@@ -735,22 +736,26 @@ export default function DropoutVisualizer() {
             </Show>
           </Show>
           
+          <div class={styles.pagination}>
+            <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep() === 0}>&lt; Prev</button>
+            <span class={styles.pageInfo}>Step {currentStep() + 1} / {dropoutResults().length}</span>
+            <button onClick={() => setCurrentStep(s => Math.min(dropoutResults().length - 1, s + 1))} disabled={currentStep() === dropoutResults().length - 1}>Next &gt;</button>
+          </div>
+          
+          <div style={{ "margin-top": "1.5rem", "border-top": "1px dashed #ccc", "padding-top": "1rem" }}>
+            <BeforeAfterComparison
+              caption={selectedCaption()!.caption}
+              result={dropoutResults()[currentStep()]}
+              separator={captionSeparators()[0]}
+              theme={isDarkMode() ? 'dark' : 'light'}
+            />
+          </div>
+          
           <For each={dropoutResults()}>
             {(result, index) => (
               <div class={styles.resultItem}>
                 <div class={styles.resultHeader}>Step {index() + 1}</div>
                 <pre>{result}</pre>
-                
-                <Show when={index() === 0}>
-                  <div style={{ "margin-top": "1.5rem", "border-top": "1px dashed #ccc", "padding-top": "1rem" }}>
-                    <BeforeAfterComparison
-                      caption={selectedCaption()!.caption}
-                      result={result}
-                      separator={captionSeparators()[0]}
-                      theme={isDarkMode() ? 'dark' : 'light'}
-                    />
-                  </div>
-                </Show>
               </div>
             )}
           </For>

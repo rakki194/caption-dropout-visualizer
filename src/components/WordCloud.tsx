@@ -62,16 +62,18 @@ export default function WordCloud(props: WordCloudProps) {
   
   const createWordCloud = () => {
     if (!svgRef) return;
+    const width = svgRef.clientWidth;
+    const height = svgRef.clientHeight;
+    if (width === 0 || height === 0) {
+      requestAnimationFrame(createWordCloud);
+      return;
+    }
     
     // Clear existing content
     d3.select(svgRef).selectAll("*").remove();
     
     const words = getTokenFrequencies();
     if (words.length === 0) return;
-    
-    // Get dimensions
-    const width = svgRef.clientWidth;
-    const height = svgRef.clientHeight;
     
     // Theme colors
     const isDark = props.theme === 'dark';

@@ -86,7 +86,12 @@ export default function PositionAnalysisChart(props: PositionAnalysisChartProps)
   
   const createChart = () => {
     if (!chartRef) return;
-    
+    const width = chartRef.clientWidth;
+    const height = chartRef.clientHeight;
+    if (width === 0 || height === 0) {
+      requestAnimationFrame(createChart);
+      return;
+    }
     // Clean up previous chart
     if (chart) {
       chart.destroy();

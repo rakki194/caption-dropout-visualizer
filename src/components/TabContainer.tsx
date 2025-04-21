@@ -22,6 +22,8 @@ export default function TabContainer(props: TabContainerProps) {
     }
   });
 
+  const active = () => props.tabs.find(tab => tab.id === activeTab());
+
   return (
     <div class={styles.tabContainer}>
       <div class={styles.tabHeader}>
@@ -38,15 +40,13 @@ export default function TabContainer(props: TabContainerProps) {
       </div>
       
       <div class={styles.tabContent}>
-        <For each={props.tabs}>
+        <Show when={active()}>
           {(tab) => (
-            <Show when={activeTab() === tab.id}>
-              <div class={styles.tabPanel}>
-                {tab.content}
-              </div>
-            </Show>
+            <div class={styles.tabPanel}>
+              {tab().content}
+            </div>
           )}
-        </For>
+        </Show>
       </div>
     </div>
   );

@@ -70,6 +70,16 @@ export default function TokenFrequencyChart(props: TokenFrequencyChartProps) {
   
   const createChart = () => {
     if (!chartRef) return;
+    const width = chartRef.clientWidth;
+    const height = chartRef.clientHeight;
+    if (width === 0 || height === 0) {
+      requestAnimationFrame(createChart);
+      return;
+    }
+    // Clean up previous chart
+    if (chart) {
+      chart.destroy();
+    }
     
     const frequencies = getTokenFrequencies();
     const tokens = Object.keys(frequencies);
