@@ -13,6 +13,16 @@
 export function processWolfCaption(caption: string): string {
   if (!caption || !caption.trim()) return '';
   
+  // Split into tag part and description part if the caption has a tag separator
+  let tagPart = '';
+  let descPart = caption;
+  
+  if (caption.includes('|||')) {
+    const parts = caption.split('|||', 2);
+    tagPart = parts[0] + '||| ';
+    descPart = parts[1];
+  }
+  
   // Common abbreviations to preserve
   const commonAbbreviations = [
     // Titles
@@ -30,7 +40,7 @@ export function processWolfCaption(caption: string): string {
   ];
   
   // Mark abbreviations with unique placeholders
-  let processedText = caption;
+  let processedText = descPart;
   const placeholders: Record<string, string> = {};
   
   // Replace abbreviations with placeholders
@@ -51,18 +61,41 @@ export function processWolfCaption(caption: string): string {
     return uniqueId;
   });
   
-  // Replace periods at sentence boundaries with ".,", looking for:
-  // 1. A period
-  // 2. Not already followed by a comma
-  // 3. Followed by whitespace and a capital letter OR end of string
-  processedText = processedText.replace(/\.(?!,)(?=\s+[A-Z]|\s*$)/g, '.,');
+  // Find sentence boundaries and add comma after periods
+  // 1. Split the text into potential sentences first (this helps with longer descriptions)
+  const sentences = processedText.split('. ');
+  
+  // Reconstruct with ".," at sentence boundaries
+  let result = '';
+  for (let i = 0; i < sentences.length; i++) {
+    // Skip empty sentences
+    if (!sentences[i].trim()) continue;
+    
+    if (i === sentences.length - 1) {
+      // Last sentence might already end with a period
+      if (sentences[i].endsWith('.')) {
+        result += sentences[i].slice(0, -1) + '.,';
+      } else {
+        // If the last sentence doesn't end with a period, just add it as is
+        result += sentences[i];
+        // If the original text ended with a period, add ".,"
+        if (descPart.trim().endsWith('.')) {
+          result += '.,';
+        }
+      }
+    } else {
+      // For intermediate sentences, add ".," and then a space
+      result += sentences[i] + '., ';
+    }
+  }
   
   // Restore placeholders
   Object.entries(placeholders).forEach(([placeholder, original]) => {
-    processedText = processedText.replace(new RegExp(placeholder, 'g'), original);
+    result = result.replace(new RegExp(placeholder, 'g'), original);
   });
   
-  return processedText;
+  // Return the tag part (if any) + processed description
+  return tagPart + result;
 }
 
 /**

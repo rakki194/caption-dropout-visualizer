@@ -101,6 +101,11 @@ const getOperationName = (type: 'dropout' | 'shuffle' | 'both') => {
   }
 };
 
+// Add this helper function for highlighting period-comma in Wolf Captions
+function highlightPeriodComma(text: string): string {
+  return text.replace(/\.,/g, '<span class="highlightSeparator">.,</span>');
+}
+
 export default function DropoutVisualizer() {
   const [datasetPath, setDatasetPath] = createSignal('/home/kade/diffusion/datasets/fd');
   const [dropoutRate, setDropoutRate] = createSignal(0.60);
@@ -369,6 +374,86 @@ export default function DropoutVisualizer() {
   const changePage = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages()) return;
     setCurrentPage(newPage);
+  };
+
+  // Enhance the Wolf Caption display component to include comparative analysis
+  const WolfCaptionDisplay = () => {
+    if (!selectedCaption()) return null;
+    
+    const original = selectedCaption()!.caption;
+    const wolfCaption = processWolfCaption(original);
+    
+    // Split by tag separator if it exists
+    let originalTag = '', originalDesc = original;
+    let wolfTag = '', wolfDesc = wolfCaption;
+    
+    if (original.includes('|||')) {
+      const originalParts = original.split('|||', 2);
+      originalTag = originalParts[0].trim();
+      originalDesc = originalParts[1].trim();
+      
+      const wolfParts = wolfCaption.split('|||', 2);
+      wolfTag = wolfParts[0].trim();
+      wolfDesc = wolfParts[1].trim();
+    }
+    
+    // Count periods and commas
+    const originalPeriods = (originalDesc.match(/\./g) || []).length;
+    const wolfPeriods = (wolfDesc.match(/\./g) || []).length;
+    const periodCommas = (wolfDesc.match(/\.,/g) || []).length;
+    
+    // Detect sentences using simple heuristic
+    const originalSentences = originalDesc.split('. ').filter(s => s.trim()).length;
+    const wolfSentences = wolfDesc.split('., ').filter(s => s.trim()).length;
+    
+    return (
+      <div class={styles.wolfCaptionContainer}>
+        <h2>Wolf Caption Transformation</h2>
+        
+        <div class={styles.captionTransformGrid}>
+          <div class={styles.transformColumn}>
+            <h3>Original Caption</h3>
+            {originalTag && <div class={styles.tagSection}>{originalTag} |||</div>}
+            <pre class={styles.originalCaption}>{originalDesc}</pre>
+            
+            <div class={styles.captionStats}>
+              <div class={styles.statItem}>
+                <span class={styles.statValue}>{originalPeriods}</span>
+                <span class={styles.statLabel}>Periods</span>
+              </div>
+              <div class={styles.statItem}>
+                <span class={styles.statValue}>{originalSentences}</span>
+                <span class={styles.statLabel}>Sentences</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class={styles.transformColumn}>
+            <h3>Wolf Caption (With Separators)</h3>
+            {wolfTag && <div class={styles.tagSection}>{wolfTag} |||</div>}
+            <pre 
+              class={styles.wolfCaption} 
+              innerHTML={highlightPeriodComma(wolfDesc)}
+            />
+            
+            <div class={styles.captionStats}>
+              <div class={styles.statItem}>
+                <span class={styles.statValue}>{wolfPeriods}</span>
+                <span class={styles.statLabel}>Periods</span>
+              </div>
+              <div class={styles.statItem}>
+                <span class={styles.statValue}>{periodCommas}</span>
+                <span class={styles.statLabel}>Period+Commas</span>
+              </div>
+              <div class={styles.statItem}>
+                <span class={styles.statValue}>{wolfSentences}</span>
+                <span class={styles.statLabel}>Sentences</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -673,20 +758,16 @@ export default function DropoutVisualizer() {
         </Show>
       </div>
 
-      <Show when={selectedCaption() && useWolfCaptions()}>
+      <Show when={selectedCaption()}>
         <div class={styles.originalCaption}>
-          <h2>Original Caption</h2>
-          <pre>{selectedCaption()?.caption}</pre>
+          <Show when={useWolfCaptions()}>
+            <WolfCaptionDisplay />
+          </Show>
           
-          <h3>Wolf Caption (With Sentence Separators)</h3>
-          <pre class={styles.wolfCaption}>{processWolfCaption(selectedCaption()!.caption)}</pre>
-        </div>
-      </Show>
-
-      <Show when={selectedCaption() && !useWolfCaptions()}>
-        <div class={styles.originalCaption}>
-          <h2>Original Caption</h2>
-          <pre>{selectedCaption()?.caption}</pre>
+          <Show when={!useWolfCaptions()}>
+            <h2>Original Caption</h2>
+            <pre>{selectedCaption()?.caption}</pre>
+          </Show>
         </div>
       </Show>
 

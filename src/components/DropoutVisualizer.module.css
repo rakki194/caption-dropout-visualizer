@@ -29,6 +29,9 @@
   --helptext-bg: #f5f7fa;
   --helptext-border: #d0d9e4;
   --helptext-color: #4a5568;
+  --separator-highlight: #5d94ff;
+  --tag-bg: #eff6ff;
+  --tag-border: #c2d9fc;
 }
 
 /* Dark theme */
@@ -61,6 +64,9 @@ html[data-theme='dark'] {
   --helptext-bg: #252b3b;
   --helptext-border: #2a3451;
   --helptext-color: #9eaabf;
+  --separator-highlight: #4d7cc9;
+  --tag-bg: #1a2a4d;
+  --tag-border: #2a4377;
 }
 
 /* Theme toggle styles */
@@ -660,7 +666,41 @@ html[data-theme='dark'] .tabButton:hover {
   border: 1px dashed var(--input-border);
 }
 
-/* Wolf Caption styles */
+/* Enhanced Wolf Caption styles */
+.wolfCaptionContainer {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.captionTransformGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.transformColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.transformColumn h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: var(--title-color);
+}
+
+.tagSection {
+  background-color: var(--tag-bg);
+  border: 1px solid var(--tag-border);
+  border-radius: 4px 4px 0 0;
+  padding: 0.5rem;
+  margin-bottom: -1px;
+  font-family: monospace;
+  font-weight: bold;
+}
+
 .wolfCaption {
   background-color: var(--wolfcaption-bg);
   border: 1px solid var(--wolfcaption-border);
@@ -669,10 +709,17 @@ html[data-theme='dark'] .tabButton:hover {
   font-family: monospace;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
-  margin-top: 0.5rem;
+  margin-top: 0;
   position: relative;
+}
+
+/* When tagSection is present, adjust the top border radius */
+.tagSection + .wolfCaption,
+.tagSection + .originalCaption {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .helpText {
@@ -687,8 +734,49 @@ html[data-theme='dark'] .tabButton:hover {
 }
 
 /* Highlight period-comma in Wolf Captions */
-.wolfCaption .highlight {
-  background-color: rgba(74, 125, 255, 0.2);
-  padding: 0 2px;
-  border-radius: 2px;
+.highlightSeparator {
+  background-color: var(--separator-highlight);
+  color: white;
+  padding: 0 3px;
+  border-radius: 3px;
+  font-weight: bold;
+  display: inline-block;
+  margin: 0 1px;
+}
+
+.captionStats {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.captionStats .statItem {
+  flex: 1;
+  min-width: auto;
+  padding: 0.5rem;
+  text-align: center;
+  border-radius: 4px;
+  background-color: var(--panel-bg);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--input-border);
+}
+
+.captionStats .statValue {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--button-bg);
+}
+
+.captionStats .statLabel {
+  font-size: 0.8rem;
+  color: var(--text-color);
+}
+
+/* Responsive styles for the caption transformation grid */
+@media (max-width: 768px) {
+  .captionTransformGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 } 
