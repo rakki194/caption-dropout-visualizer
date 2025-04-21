@@ -87,7 +87,7 @@ export default function WordCloud(props: WordCloudProps) {
     };
     
     // Create layout
-    const layout = d3Cloud.default()
+    const layout = d3Cloud()
       .size([width, height])
       .words(words.map(d => ({ text: d.text, size: 0, value: d.value, isOriginal: d.isOriginal })))
       .padding(5)
