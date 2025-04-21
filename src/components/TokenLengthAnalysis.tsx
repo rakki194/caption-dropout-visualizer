@@ -22,6 +22,35 @@ export default function TokenLengthAnalysis(props: TokenLengthAnalysisProps) {
   let scatterRef: HTMLCanvasElement | undefined;
   let scatterChart: Chart | undefined;
 
+  function doubleRAF(fn: () => void) {
+    requestAnimationFrame(() => requestAnimationFrame(fn));
+  }
+
+  function handleChartRef(el: HTMLCanvasElement) {
+    chartRef = el;
+    if (chart) {
+      chart.destroy();
+      chart = undefined;
+    }
+    if (chartRef && scatterRef && chartRef.isConnected && scatterRef.isConnected) {
+      doubleRAF(() => {
+        createCharts();
+      });
+    }
+  }
+  function handleScatterRef(el: HTMLCanvasElement) {
+    scatterRef = el;
+    if (scatterChart) {
+      scatterChart.destroy();
+      scatterChart = undefined;
+    }
+    if (chartRef && scatterRef && chartRef.isConnected && scatterRef.isConnected) {
+      doubleRAF(() => {
+        createCharts();
+      });
+    }
+  }
+
   const analyzeTokenLengthEffects = () => {
     // Get tokens from original caption
     const originalTokens = props.caption
@@ -236,34 +265,33 @@ export default function TokenLengthAnalysis(props: TokenLengthAnalysisProps) {
     });
   };
   
-  onMount(() => {
-    createCharts();
-  });
-  
-  // Update charts when results or theme changes
   createEffect(() => {
     const { results, theme } = props;
-    if (results.length > 0) {
-      createCharts();
+    if (results.length > 0 && chartRef && scatterRef && chartRef.isConnected && scatterRef.isConnected) {
+      if (chart) chart.destroy();
+      if (scatterChart) scatterChart.destroy();
+      doubleRAF(() => {
+        createCharts();
+      });
     }
   });
   
   onCleanup(() => {
-    if (chart) chart.destroy();
-    if (scatterChart) scatterChart.destroy();
+    if (chart) { chart.destroy(); chart = undefined; }
+    if (scatterChart) { scatterChart.destroy(); scatterChart = undefined; }
   });
   
   return (
-    <div class={styles.chartContainer}>
+    <div class={styles.chartContainer} style={{ width: '100%', 'min-width': '400px', height: '650px' }}>
       <h3>Token Length Analysis</h3>
       <p>These charts show how token length affects retention probability.</p>
       
-      <div style={{ "height": "300px", "margin-bottom": "20px" }}>
-        <canvas ref={chartRef}></canvas>
+      <div style={{ height: '300px', 'margin-bottom': '20px' }}>
+        <canvas ref={handleChartRef} width="600" height="300"></canvas>
       </div>
       
-      <div style={{ "height": "300px" }}>
-        <canvas ref={scatterRef}></canvas>
+      <div style={{ height: '300px' }}>
+        <canvas ref={handleScatterRef} width="600" height="300"></canvas>
       </div>
     </div>
   );

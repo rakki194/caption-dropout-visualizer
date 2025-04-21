@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, onMount } from 'solid-js';
+import { createEffect, onCleanup } from 'solid-js';
 import Chart from 'chart.js/auto';
 import styles from './DropoutVisualizer.module.css';
 
@@ -12,6 +12,23 @@ interface TokenFrequencyChartProps {
 export default function TokenFrequencyChart(props: TokenFrequencyChartProps) {
   let chartRef: HTMLCanvasElement | undefined;
   let chart: Chart | undefined;
+
+  function doubleRAF(fn: () => void) {
+    requestAnimationFrame(() => requestAnimationFrame(fn));
+  }
+
+  function handleChartRef(el: HTMLCanvasElement) {
+    chartRef = el;
+    if (chart) {
+      chart.destroy();
+      chart = undefined;
+    }
+    if (chartRef && chartRef.isConnected) {
+      doubleRAF(() => {
+        createChart();
+      });
+    }
+  }
 
   const getTokenFrequencies = () => {
     // Extract all tokens from the original caption
@@ -148,27 +165,28 @@ export default function TokenFrequencyChart(props: TokenFrequencyChartProps) {
     createChart();
   };
   
-  onMount(() => {
-    createChart();
-  });
-  
-  // Update chart when results or theme changes
+  // Remove onMount
+  // Remove requestAnimationFrame from createEffect, just call updateChart
   createEffect(() => {
     const { results, theme } = props;
-    if (results.length > 0) {
-      updateChart();
+    if (results.length > 0 && chartRef && chartRef.isConnected) {
+      if (chart) chart.destroy();
+      doubleRAF(() => {
+        updateChart();
+      });
     }
   });
   
   onCleanup(() => {
     if (chart) {
       chart.destroy();
+      chart = undefined;
     }
   });
   
   return (
-    <div class={styles.chartContainer}>
-      <canvas ref={chartRef} height="400"></canvas>
+    <div class={styles.chartContainer} style={{ width: '100%', 'min-width': '400px', height: '400px' }}>
+      <canvas ref={handleChartRef} width="600" height="400"></canvas>
     </div>
   );
 } 

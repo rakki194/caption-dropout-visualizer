@@ -19,6 +19,23 @@ export default function TokenHeatmap(props: TokenHeatmapProps) {
   let chartRef: HTMLCanvasElement | undefined;
   let chart: Chart | undefined;
 
+  function doubleRAF(fn: () => void) {
+    requestAnimationFrame(() => requestAnimationFrame(fn));
+  }
+
+  function handleChartRef(el: HTMLCanvasElement) {
+    chartRef = el;
+    if (chart) {
+      chart.destroy();
+      chart = undefined;
+    }
+    if (chartRef && chartRef.isConnected) {
+      doubleRAF(() => {
+        createHeatmap();
+      });
+    }
+  }
+
   const getTokenOccurrenceMatrix = () => {
     // Extract all unique tokens from the original caption
     const tokens = props.caption
@@ -185,30 +202,29 @@ export default function TokenHeatmap(props: TokenHeatmapProps) {
     }
   };
   
-  onMount(() => {
-    createHeatmap();
-  });
-  
-  // Update chart when results or theme changes
   createEffect(() => {
     const { results, theme } = props;
-    if (results.length > 0) {
-      createHeatmap();
+    if (results.length > 0 && chartRef && chartRef.isConnected) {
+      if (chart) chart.destroy();
+      doubleRAF(() => {
+        createHeatmap();
+      });
     }
   });
   
   onCleanup(() => {
     if (chart) {
       chart.destroy();
+      chart = undefined;
     }
   });
   
   return (
-    <div class={styles.chartContainer}>
+    <div class={styles.chartContainer} style={{ width: '100%', 'min-width': '400px', height: '450px' }}>
       <h3>Token Presence Across Results</h3>
       <p>This heatmap shows which tokens are present (blue) or absent (light) in each result.</p>
       <div style={{ height: '400px' }}>
-        <canvas ref={chartRef}></canvas>
+        <canvas ref={handleChartRef} width="600" height="400"></canvas>
       </div>
     </div>
   );

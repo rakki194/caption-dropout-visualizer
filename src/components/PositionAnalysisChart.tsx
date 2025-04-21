@@ -13,6 +13,23 @@ export default function PositionAnalysisChart(props: PositionAnalysisChartProps)
   let chartRef: HTMLCanvasElement | undefined;
   let chart: Chart | undefined;
 
+  function doubleRAF(fn: () => void) {
+    requestAnimationFrame(() => requestAnimationFrame(fn));
+  }
+
+  function handleChartRef(el: HTMLCanvasElement) {
+    chartRef = el;
+    if (chart) {
+      chart.destroy();
+      chart = undefined;
+    }
+    if (chartRef && chartRef.isConnected) {
+      doubleRAF(() => {
+        createChart();
+      });
+    }
+  }
+
   const analyzePositionEffects = () => {
     // Get tokens from original caption
     const originalTokens = props.caption
@@ -155,30 +172,29 @@ export default function PositionAnalysisChart(props: PositionAnalysisChartProps)
     });
   };
   
-  onMount(() => {
-    createChart();
-  });
-  
-  // Update chart when results or theme changes
   createEffect(() => {
     const { results, theme } = props;
-    if (results.length > 0) {
-      createChart();
+    if (results.length > 0 && chartRef && chartRef.isConnected) {
+      if (chart) chart.destroy();
+      doubleRAF(() => {
+        createChart();
+      });
     }
   });
   
   onCleanup(() => {
     if (chart) {
       chart.destroy();
+      chart = undefined;
     }
   });
   
   return (
-    <div class={styles.chartContainer}>
+    <div class={styles.chartContainer} style={{ width: '100%', 'min-width': '400px', height: '400px' }}>
       <h3>Token Retention by Position</h3>
       <p>This chart shows how token position affects retention probability.</p>
       <div style={{ height: '350px' }}>
-        <canvas ref={chartRef}></canvas>
+        <canvas ref={handleChartRef} width="600" height="350"></canvas>
       </div>
     </div>
   );
